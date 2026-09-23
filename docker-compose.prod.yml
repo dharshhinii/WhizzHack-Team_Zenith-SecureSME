@@ -1,0 +1,13 @@
+version: "3.9"
+services:
+  app:
+    build: .
+    container_name: cyber-tools-demo
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - LANG=en
+    # Uncomment the next lines if you want to persist generated reports on the host
+    # volumes:
+    #   - ./reports:/app/reports
