@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   app:
     build: .
@@ -8,6 +7,7 @@ services:
       - "8000:8000"
     environment:
       - LANG=en
+    command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
     # Uncomment the next lines if you want to persist generated reports on the host
     # volumes:
     #   - ./reports:/app/reports
