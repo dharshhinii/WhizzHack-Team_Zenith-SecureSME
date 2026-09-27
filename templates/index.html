@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShieldCheck — Simple Website Security for Business Owners</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #212529;
+        }
+        .hero-section {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 3.5rem 1rem;
+            border-radius: 0 0 1.5rem 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .card-custom {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+            transition: transform 0.2s;
+        }
+        .card-custom:hover {
+            transform: translateY(-2px);
+        }
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: white;
+            margin: 0 auto;
+        }
+        .bg-safe { background-color: #2e7d32; }
+        .bg-attention { background-color: #f57c00; }
+        .bg-critical { background-color: #c62828; }
+        .severity-badge {
+            font-size: 0.8rem;
+            padding: 0.35rem 0.65rem;
+            border-radius: 20px;
+        }
+        .voice-box {
+            background-color: #e8f0fe;
+            border-left: 5px solid #1a73e8;
+            padding: 1.2rem;
+            border-radius: 8px;
+        }
+        .btn-voice {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 0.5rem 1.2rem;
+        }
+        .btn-voice:hover {
+            background-color: #1557b0;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hero Header -->
+    <div class="hero-section text-center">
+        <div class="container max-width-800">
+            <h1 class="fw-bold mb-3"><i class="bi bi-shield-check me-2"></i>ShieldCheck Security</h1>
+            <p class="lead mb-4">Instant, plain-English website security reports & voice alerts for small business owners.</p>
+        </div>
+    </div>
+
+    <div class="container my-5" style="max-width: 900px;">
+        
+        <!-- Scan Input Form -->
+        <div class="card card-custom p-4 mb-4">
+            <h4 class="fw-bold mb-3"><i class="bi bi-search me-2"></i>Scan Your Business Website</h4>
+            <form id="scanForm">
+                <div class="mb-3">
+                    <label for="urlInput" class="form-label text-muted">Enter your website URL (e.g. myrestaurant.com)</label>
+                    <input type="text" class="form-control form-control-lg" id="urlInput" placeholder="https://example.com" required>
+                </div>
+                <div class="form-check mb-4">
+                    <input class="form-check-input" type="checkbox" id="authCheck" required>
+                    <label class="form-check-label text-secondary" for="authCheck">
+                        I confirm that I own this website or have explicit permission to test it.
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg w-100 py-3 fw-bold" id="startBtn">
+                    <i class="bi bi-play-circle me-2"></i>Start Free Security Scan
+                </button>
+            </form>
+        </div>
+
+        <!-- Scanning Loader (Hidden by default) -->
+        <div class="card card-custom p-5 text-center d-none mb-4" id="scanLoader">
+            <div class="spinner-border text-primary mb-3" style="width: 3.5rem; height: 3.5rem;" role="status"></div>
+            <h4 class="fw-bold" id="loaderStatus">Running Security Scan...</h4>
+            <p class="text-muted mb-0">Checking your website's protection. This usually takes about 30 seconds.</p>
+        </div>
+
+        <!-- Scan Results Section (Hidden by default) -->
+        <div class="d-none" id="resultsSection">
+            
+            <!-- Voice Alert & Summary Card -->
+            <div class="card card-custom p-4 mb-4">
+                <div class="row align-items-center">
+                    <div class="col-md-3 text-center mb-3 mb-md-0">
+                        <div class="score-circle" id="scoreCircle">--</div>
+                        <div class="mt-2 fw-bold" id="ratingText">--</div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="voice-box mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold text-primary"><i class="bi bi-volume-up-fill me-2"></i>Voice Assistant Summary</span>
+                                <button class="btn btn-voice btn-sm" id="replayVoiceBtn">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Replay Audio
+                                </button>
+                            </div>
+                            <p class="mb-0 fs-6 text-dark" id="voiceSummaryText">Scan complete.</p>
+                        </div>
+                        <p class="text-secondary mb-0" id="executiveSummary">Overview</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Issues List Header -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Security Findings</h4>
+                <button class="btn btn-outline-primary" id="toggleDetailsBtn" onclick="toggleAllDetails()">
+                    <i class="bi bi-list-nested me-1"></i>Click More (Full Report)
+                </button>
+            </div>
+
+            <!-- Findings Accordion/Cards Container -->
+            <div id="findingsContainer"></div>
+
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentResults = null;
+
+        document.getElementById('scanForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const url = document.getElementById('urlInput').value.trim();
+            const auth = document.getElementById('authCheck').checked;
+
+            document.getElementById('scanForm').classList.add('d-none');
+            document.getElementById('resultsSection').classList.add('d-none');
+            document.getElementById('scanLoader').classList.remove('d-none');
+
+            try {
+                const startRes = await fetch('/api/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url, confirm_authorized: auth })
+                });
+                const startData = await startRes.json();
+
+                if (!startRes.ok) {
+                    alert(startData.detail || 'Failed to start scan.');
+                    resetForm();
+                    return;
+                }
+
+                pollScanStatus(startData.job_id);
+
+            } catch (err) {
+                alert('Network error starting scan: ' + err.message);
+                resetForm();
+            }
+        });
+
+        async function pollScanStatus(jobId) {
+            const interval = setInterval(async () => {
+                try {
+                    const statusRes = await fetch(`/api/scan/${jobId}`);
+                    const statusData = await statusRes.json();
+
+                    if (statusData.status === 'COMPLETED') {
+                        clearInterval(interval);
+                        displayResults(statusData.results);
+                    } else if (statusData.status === 'FAILED') {
+                        clearInterval(interval);
+                        alert('Scan failed: ' + (statusData.error || 'Unknown error'));
+                        resetForm();
+                    } else {
+                        document.getElementById('loaderStatus').innerText = statusData.step || 'Scanning in progress...';
+                    }
+                } catch (e) {
+                    console.error("Polling error", e);
+                }
+            }, 3000);
+        }
+
+        function speakVoiceSummary(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Stop any existing speech
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function displayResults(data) {
+            currentResults = data;
+            document.getElementById('scanLoader').classList.add('d-none');
+            document.getElementById('resultsSection').classList.remove('d-none');
+
+            const score = data.business_impact_score || 85;
+            const rating = data.safety_rating || 'SAFE';
+            const voiceText = data.voice_summary || 'Your scan has completed.';
+            const execSummary = data.executive_summary || '';
+
+            // Score circle
+            const circle = document.getElementById('scoreCircle');
+            circle.innerText = score + '/100';
+            circle.className = 'score-circle ' + (score > 80 ? 'bg-safe' : (score > 50 ? 'bg-attention' : 'bg-critical'));
+            document.getElementById('ratingText').innerText = rating.replace('_', ' ');
+
+            // Voice & Executive summary
+            document.getElementById('voiceSummaryText').innerText = voiceText;
+            document.getElementById('executiveSummary').innerText = execSummary;
+
+            // Trigger Voice Alert automatically
+            speakVoiceSummary(voiceText);
+
+            document.getElementById('replayVoiceBtn').onclick = () => speakVoiceSummary(voiceText);
+
+            // Render Findings Cards
+            const container = document.getElementById('findingsContainer');
+            container.innerHTML = '';
+
+            if (!data.findings || data.findings.length === 0) {
+                container.innerHTML = `<div class="card card-custom p-4 text-center text-success fw-bold"><i class="bi bi-check-circle-fill me-2 fs-3"></i>No Security Issues Detected! Your website is well protected.</div>`;
+                return;
+            }
+
+            data.findings.forEach((finding, idx) => {
+                const sevClass = finding.severity === 'CRITICAL' ? 'bg-danger' :
+                                (finding.severity === 'HIGH' ? 'bg-danger' :
+                                (finding.severity === 'MEDIUM' ? 'bg-warning text-dark' : 'bg-info text-dark'));
+
+                const cardHtml = `
+                    <div class="card card-custom p-4 mb-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="fw-bold mb-0">${finding.title}</h5>
+                            <span class="badge ${sevClass} severity-badge">${finding.severity}</span>
+                        </div>
+                        <p class="text-secondary mb-3">${finding.what_is_it}</p>
+                        
+                        <!-- Click More Drill Down Details -->
+                        <div class="collapse" id="detailCard_${idx}">
+                            <div class="border-top pt-3 mt-2">
+                                <h6 class="fw-bold text-danger"><i class="bi bi-shield-exclamation me-2"></i>Why This Matters To Your Business</h6>
+                                <p class="text-dark small mb-3">${finding.business_risk}</p>
+                                
+                                <h6 class="fw-bold text-success"><i class="bi bi-tools me-2"></i>How To Fix It</h6>
+                                <div class="bg-light p-3 rounded border text-dark small mb-2">
+                                    ${finding.how_to_fix}
+                                </div>
+                                <div class="text-muted fs-7">Detected check: <code>${finding.raw_technical_name}</code></div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-sm btn-outline-secondary mt-2 w-100" type="button" data-bs-toggle="collapse" data-bs-target="#detailCard_${idx}">
+                            <i class="bi bi-chevron-down me-1"></i>Click More Details & Developer Fix
+                        </button>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            });
+        }
+
+        function toggleAllDetails() {
+            const collapses = document.querySelectorAll('#findingsContainer .collapse');
+            collapses.forEach(c => {
+                const bsCollapse = new bootstrap.Collapse(c, { toggle: true });
+            });
+        }
+
+        function resetForm() {
+            document.getElementById('scanLoader').classList.add('d-none');
+            document.getElementById('scanForm').classList.remove('d-none');
+        }
+    </script>
+</body>
+</html>
